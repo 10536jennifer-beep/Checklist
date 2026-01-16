@@ -262,6 +262,10 @@
       
       const [isAddingCategory, setIsAddingCategory] = useState(false);
       const [newCategoryNameStr, setNewCategoryNameStr] = useState("");
+      
+      // New State for renaming category
+      const [isRenamingCategory, setIsRenamingCategory] = useState(false);
+      const [renamingCategoryName, setRenamingCategoryName] = useState("");
 
       const [newItemName, setNewItemName] = useState("");
       const [newItemCategory, setNewItemCategory] = useState(DEFAULT_CATEGORIES[0]);
@@ -354,6 +358,36 @@
             });
           }
         }, 100);
+      };
+
+      const handleRenameCategory = (e) => {
+        e.preventDefault();
+        const newName = renamingCategoryName.trim();
+        const oldName = activeCategory;
+        
+        if (!newName) return;
+        
+        if (newName === oldName) {
+            setIsRenamingCategory(false);
+            return;
+        }
+
+        if (categories.includes(newName)) {
+            alert("這個分類已經存在了！");
+            return;
+        }
+
+        // Update Categories List
+        const newCategories = categories.map(cat => cat === oldName ? newName : cat);
+        setCategories(newCategories);
+
+        // Update Items associated with this category
+        const newItems = items.map(item => item.category === oldName ? { ...item, category: newName } : item);
+        setItems(newItems);
+
+        // Update Active Category
+        setActiveCategory(newName);
+        setIsRenamingCategory(false);
       };
 
       const updateItem = (e) => {
@@ -464,7 +498,19 @@
             <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden min-h-[50vh]">
               {/* Category Header */}
               <div className={`px-4 py-4 border-b border-slate-100 flex justify-between items-center ${allChecked ? 'bg-green-50' : 'bg-slate-50'}`}>
-                <h2 className="font-bold text-xl text-slate-700">{activeCategory}</h2>
+                <div className="flex items-center gap-2">
+                    <h2 className="font-bold text-xl text-slate-700">{activeCategory}</h2>
+                    <button 
+                        onClick={() => {
+                            setRenamingCategoryName(activeCategory);
+                            setIsRenamingCategory(true);
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                        title="編輯分類名稱"
+                    >
+                        <Edit3 className="w-4 h-4" />
+                    </button>
+                </div>
                 <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${allChecked ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-slate-500 border-slate-200'}`}>
                   {activeCategoryProgress.current} / {activeCategoryProgress.total}
                 </span>
@@ -616,6 +662,53 @@
                     className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                   >
                     新增分類
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Rename Category Modal */}
+          {isRenamingCategory && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+              <form onSubmit={handleRenameCategory} className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl scale-100">
+                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                  <h3 className="font-bold text-lg text-slate-800">編輯分類名稱</h3>
+                  <button type="button" onClick={() => setIsRenamingCategory(false)} className="text-slate-400 hover:text-slate-600">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">新的名稱</label>
+                    <div className="relative">
+                      <Tag className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                      <input 
+                        type="text" 
+                        autoFocus
+                        required
+                        value={renamingCategoryName}
+                        onChange={(e) => setRenamingCategoryName(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-lg"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsRenamingCategory(false)}
+                    className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    儲存
                   </button>
                 </div>
               </form>
