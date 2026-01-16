@@ -1,0 +1,706 @@
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { 
+  Check, 
+  Plus, 
+  Trash2, 
+  Edit3, 
+  Save, 
+  X, 
+  ShoppingBag, 
+  Plane, 
+  Percent,
+  RotateCcw,
+  AlertCircle,
+  AlertTriangle,
+  Tag
+} from 'lucide-react';
+
+const DEFAULT_CATEGORIES = [
+  "💦盥洗用品",
+  "🛏生活用品",
+  "💄化妝",
+  "🔌電器用品",
+  "📜證件",
+  "🏥藥",
+  "👕衣服",
+  "✒️文具",
+  "🍲食物",
+  "🆕其他"
+];
+
+// Initial data parsed from user's request
+const INITIAL_DATA = [
+  // 盥洗用品
+  { id: 1, category: "💦盥洗用品", name: "毛巾×4", note: "", checked: false },
+  { id: 2, category: "💦盥洗用品", name: "卸妝油", note: "", checked: false },
+  { id: 3, category: "💦盥洗用品", name: "沐浴乳", note: "德國很乾燥，建議帶保濕款", checked: false },
+  { id: 4, category: "💦盥洗用品", name: "洗髮精", note: "", checked: false },
+  { id: 5, category: "💦盥洗用品", name: "潤髮乳", note: "", checked: false },
+  { id: 6, category: "💦盥洗用品", name: "洗面乳", note: "", checked: false },
+  { id: 7, category: "💦盥洗用品", name: "髮油", note: "", checked: false },
+  { id: 8, category: "💦盥洗用品", name: "牙刷", note: "", checked: false },
+  { id: 9, category: "💦盥洗用品", name: "牙膏", note: "", checked: false },
+  { id: 10, category: "💦盥洗用品", name: "牙線", note: "", checked: false },
+  { id: 11, category: "💦盥洗用品", name: "洗澡拖鞋", note: "", checked: false },
+  { id: 12, category: "💦盥洗用品", name: "角膜塑型片", note: "包含相關清潔液", checked: false },
+  { id: 13, category: "💦盥洗用品", name: "人工淚液", note: "", checked: false },
+  { id: 14, category: "💦盥洗用品", name: "清洗液", note: "", checked: false },
+  { id: 15, category: "💦盥洗用品", name: "吸棒", note: "", checked: false },
+
+  // 生活用品
+  { id: 16, category: "🛏生活用品", name: "棉花棒", note: "", checked: false },
+  { id: 17, category: "🛏生活用品", name: "髮圈", note: "", checked: false },
+  { id: 18, category: "🛏生活用品", name: "保濕乳液", note: "必備！歐洲超乾", checked: false },
+  { id: 19, category: "🛏生活用品", name: "修眉刀", note: "", checked: false },
+  { id: 20, category: "🛏生活用品", name: "化妝鏡", note: "", checked: false },
+  { id: 21, category: "🛏生活用品", name: "粉刺夾", note: "", checked: false },
+  { id: 22, category: "🛏生活用品", name: "梳子", note: "", checked: false },
+  { id: 23, category: "🛏生活用品", name: "眼罩", note: "", checked: false },
+  { id: 24, category: "🛏生活用品", name: "耳塞", note: "", checked: false },
+  { id: 25, category: "🛏生活用品", name: "口罩", note: "", checked: false },
+  { id: 26, category: "🛏生活用品", name: "衛生棉", note: "", checked: false },
+  { id: 27, category: "🛏生活用品", name: "指甲剪", note: "", checked: false },
+  { id: 28, category: "🛏生活用品", name: "磨甲棒", note: "", checked: false },
+  { id: 29, category: "🛏生活用品", name: "指緣油", note: "", checked: false },
+  { id: 30, category: "🛏生活用品", name: "小剪刀", note: "記得放託運", checked: false },
+  { id: 31, category: "🛏生活用品", name: "雨傘", note: "德國很常下雨，建議堅固防風", checked: false },
+  { id: 32, category: "🛏生活用品", name: "塑膠袋×n", note: "", checked: false },
+  { id: 33, category: "🛏生活用品", name: "衛生紙", note: "隨身包那種", checked: false },
+  { id: 34, category: "🛏生活用品", name: "濕紙巾", note: "", checked: false },
+  { id: 35, category: "🛏生活用品", name: "小瓶洗衣精", note: "剛到第一週急用", checked: false },
+  { id: 36, category: "🛏生活用品", name: "床包床套", note: "注意德國枕頭多為80x80cm方形", checked: false },
+  { id: 37, category: "🛏生活用品", name: "防狼噴霧", note: "注意入境法規，通常需放託運", checked: false },
+  { id: 38, category: "🛏生活用品", name: "洗碗精", note: "", checked: false },
+  { id: 39, category: "🛏生活用品", name: "洗碗海綿", note: "", checked: false },
+  { id: 40, category: "🛏生活用品", name: "抹布", note: "", checked: false },
+  { id: 41, category: "🛏生活用品", name: "廚房剪刀", note: "", checked: false },
+  { id: 42, category: "🛏生活用品", name: "環保餐具", note: "", checked: false },
+  { id: 43, category: "🛏生活用品", name: "刀子", note: "託運！", checked: false },
+  { id: 44, category: "🛏生活用品", name: "手機掛繩", note: "歐洲防搶必備", checked: false },
+  { id: 45, category: "🛏生活用品", name: "保溫瓶", note: "", checked: false },
+
+  // 化妝
+  { id: 46, category: "💄化妝", name: "防曬", note: "", checked: false },
+  { id: 47, category: "💄化妝", name: "隔離", note: "", checked: false },
+  { id: 48, category: "💄化妝", name: "遮瑕", note: "", checked: false },
+  { id: 49, category: "💄化妝", name: "日拋", note: "多帶一點，歐洲買隱眼要處方", checked: false },
+  { id: 50, category: "💄化妝", name: "眼藥水", note: "", checked: false },
+  { id: 51, category: "💄化妝", name: "眉筆", note: "", checked: false },
+  { id: 52, category: "💄化妝", name: "染眉膏", note: "", checked: false },
+  { id: 53, category: "💄化妝", name: "刷具", note: "", checked: false },
+  { id: 54, category: "💄化妝", name: "腮紅", note: "", checked: false },
+  { id: 55, category: "💄化妝", name: "蜜粉", note: "", checked: false },
+  { id: 56, category: "💄化妝", name: "眼影", note: "", checked: false },
+  { id: 57, category: "💄化妝", name: "睫毛膏", note: "", checked: false },
+  { id: 58, category: "💄化妝", name: "眼線筆", note: "", checked: false },
+  { id: 59, category: "💄化妝", name: "口紅", note: "", checked: false },
+  { id: 60, category: "💄化妝", name: "夾睫毛器", note: "", checked: false },
+  { id: 61, category: "💄化妝", name: "吸油面紙", note: "", checked: false },
+  { id: 62, category: "💄化妝", name: "隨身鏡", note: "", checked: false },
+  { id: 63, category: "💄化妝", name: "香水", note: "", checked: false },
+  { id: 64, category: "💄化妝", name: "髮捲", note: "", checked: false },
+  { id: 65, category: "💄化妝", name: "護唇膏", note: "必備", checked: false },
+  { id: 66, category: "💄化妝", name: "護手霜", note: "必備", checked: false },
+
+  // 電器
+  { id: 67, category: "🔌電器用品", name: "檯燈", note: "可考慮去當地買", checked: false },
+  { id: 68, category: "🔌電器用品", name: "吹風機", note: "注意電壓需支援220V", checked: false },
+  { id: 69, category: "🔌電器用品", name: "捲髮棒", note: "注意電壓", checked: false },
+  { id: 70, category: "🔌電器用品", name: "轉換插頭", note: "歐規雙圓頭，建議帶2-3個", checked: false },
+  { id: 71, category: "🔌電器用品", name: "煮飯的(電鍋?)", note: "傳統電鍋好用", checked: false },
+  { id: 72, category: "🔌電器用品", name: "行動電源", note: "必須放手提行李", checked: false },
+  { id: 73, category: "🔌電器用品", name: "（有線）耳機", note: "", checked: false },
+  { id: 74, category: "🔌電器用品", name: "電腦 + 充電器", note: "", checked: false },
+  { id: 75, category: "🔌電器用品", name: "滑鼠", note: "", checked: false },
+  { id: 76, category: "🔌電器用品", name: "平板", note: "", checked: false },
+  { id: 77, category: "🔌電器用品", name: "備用手機", note: "以防手機被偷", checked: false },
+  { id: 78, category: "🔌電器用品", name: "手錶 + 充電器", note: "", checked: false },
+  { id: 79, category: "🔌電器用品", name: "SIM卡卡針", note: "換網卡必備", checked: false },
+  { id: 80, category: "🔌電器用品", name: "延長線", note: "需支援220V", checked: false },
+
+  // 證件
+  { id: 81, category: "📜證件", name: "護照", note: "檢查有效期限", checked: false },
+  { id: 82, category: "📜證件", name: "身份證", note: "", checked: false },
+  { id: 83, category: "📜證件", name: "健保卡", note: "", checked: false },
+  { id: 84, category: "📜證件", name: "信用卡", note: "建議帶兩張以上不同發卡組織", checked: false },
+  { id: 85, category: "📜證件", name: "高中畢業證書影本", note: "", checked: false },
+  { id: 86, category: "📜證件", name: "邀請函影本", note: "入海關備查", checked: false },
+
+  // 藥
+  { id: 87, category: "🏥藥", name: "感冒藥", note: "", checked: false },
+  { id: 88, category: "🏥藥", name: "脹氣藥", note: "德國飲食易脹氣", checked: false },
+  { id: 89, category: "🏥藥", name: "止痛藥", note: "", checked: false },
+  { id: 90, category: "🏥藥", name: "舌頭破洞藥", note: "", checked: false },
+  { id: 91, category: "🏥藥", name: "OK蹦", note: "", checked: false },
+  { id: 92, category: "🏥藥", name: "防蚊液", note: "夏天會有蚊蟲", checked: false },
+
+  // 衣服 (Combined list)
+  { id: 93, category: "👕衣服", name: "布鞋/板鞋", note: "好走的鞋最重要", checked: false },
+  { id: 94, category: "👕衣服", name: "拖鞋", note: "室內用", checked: false },
+  { id: 95, category: "👕衣服", name: "襪子", note: "", checked: false },
+  { id: 96, category: "👕衣服", name: "內衣×4", note: "", checked: false },
+  { id: 97, category: "👕衣服", name: "內褲×4", note: "", checked: false },
+  { id: 98, category: "👕衣服", name: "發熱衣×3", note: "Uniqlo heattech", checked: false },
+  { id: 99, category: "👕衣服", name: "發熱褲×2", note: "", checked: false },
+  { id: 100, category: "👕衣服", name: "毛衣×3", note: "洋蔥式穿法", checked: false },
+  { id: 101, category: "👕衣服", name: "大學T×2", note: "", checked: false },
+  { id: 102, category: "👕衣服", name: "長袖襯衫×1", note: "正式場合用", checked: false },
+  { id: 103, category: "👕衣服", name: "外套×2", note: "防風防水佳", checked: false },
+  { id: 104, category: "👕衣服", name: "牛仔褲×2", note: "", checked: false },
+  { id: 105, category: "👕衣服", name: "棉褲×1", note: "居家穿", checked: false },
+  { id: 106, category: "👕衣服", name: "繭型褲×2", note: "", checked: false },
+  { id: 107, category: "👕衣服", name: "短袖×2", note: "室內暖氣強時穿", checked: false },
+  { id: 108, category: "👕衣服", name: "鴨舌帽×1", note: "", checked: false },
+  { id: 109, category: "👕衣服", name: "毛帽×1", note: "冬天必備", checked: false },
+  { id: 110, category: "👕衣服", name: "圍巾", note: "", checked: false },
+  { id: 111, category: "👕衣服", name: "隨身小包包", note: "", checked: false },
+  { id: 112, category: "👕衣服", name: "上課背包", note: "裝筆電書本", checked: false },
+  { id: 113, category: "👕衣服", name: "出去玩中包包", note: "", checked: false },
+  { id: 114, category: "👕衣服", name: "睡衣", note: "", checked: false },
+
+  // 文具
+  { id: 115, category: "✒️文具", name: "鉛筆盒", note: "德國文具很貴", checked: false },
+  { id: 116, category: "✒️文具", name: "筆記本", note: "", checked: false },
+  { id: 117, category: "✒️文具", name: "麗可帶替換芯", note: "必帶！德國難買", checked: false },
+  { id: 118, category: "✒️文具", name: "長尾夾", note: "", checked: false },
+  { id: 119, category: "✒️文具", name: "便利貼", note: "", checked: false },
+  { id: 120, category: "✒️文具", name: "計算機", note: "", checked: false },
+
+  // 食物
+  { id: 121, category: "🍲食物", name: "泡麵×n", note: "思鄉救星", checked: false },
+  { id: 122, category: "🍲食物", name: "沙茶醬", note: "玻璃罐記得包好", checked: false },
+  { id: 123, category: "🍲食物", name: "豆瓣醬", note: "", checked: false },
+];
+
+export default function GermanyPackingList() {
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem('germany_packing_list');
+    return saved ? JSON.parse(saved) : INITIAL_DATA;
+  });
+
+  const [categories, setCategories] = useState(() => {
+    const saved = localStorage.getItem('germany_packing_categories');
+    return saved ? JSON.parse(saved) : DEFAULT_CATEGORIES;
+  });
+
+  const [activeCategory, setActiveCategory] = useState(DEFAULT_CATEGORIES[0]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const scrollContainerRef = useRef(null);
+  
+  // Custom Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    actionType: "", // 'delete', 'reset'
+    targetId: null
+  });
+  
+  // New Category State
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryNameStr, setNewCategoryNameStr] = useState("");
+
+  // New Item State
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemCategory, setNewItemCategory] = useState(DEFAULT_CATEGORIES[0]);
+  const [newItemNote, setNewItemNote] = useState("");
+
+  // Update localStorage when items change
+  useEffect(() => {
+    localStorage.setItem('germany_packing_list', JSON.stringify(items));
+  }, [items]);
+
+  // Update localStorage when categories change
+  useEffect(() => {
+    localStorage.setItem('germany_packing_categories', JSON.stringify(categories));
+  }, [categories]);
+
+  const toggleCheck = (id) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, checked: !item.checked } : item
+    ));
+  };
+
+  const requestDelete = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "刪除物品",
+      message: "確定要刪除這個物品嗎？此動作無法復原。",
+      actionType: "delete",
+      targetId: id
+    });
+  };
+
+  const requestReset = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: "重置所有清單",
+      message: "確定要重置嗎？這將會清除您所有新增的物品、分類以及勾選狀態，回復到初始設定。",
+      actionType: "reset",
+      targetId: null
+    });
+  };
+
+  const handleConfirm = () => {
+    if (confirmModal.actionType === 'delete') {
+      setItems(items.filter(item => item.id !== confirmModal.targetId));
+    } else if (confirmModal.actionType === 'reset') {
+      setItems(INITIAL_DATA);
+      setCategories(DEFAULT_CATEGORIES);
+      setActiveCategory(DEFAULT_CATEGORIES[0]);
+    }
+    setConfirmModal({ ...confirmModal, isOpen: false });
+  };
+
+  const addItem = (e) => {
+    e.preventDefault();
+    if (!newItemName.trim()) return;
+
+    const newItem = {
+      id: Date.now(),
+      category: newItemCategory,
+      name: newItemName,
+      note: newItemNote,
+      checked: false
+    };
+
+    setItems([...items, newItem]);
+    setNewItemName("");
+    setNewItemNote("");
+    setIsAdding(false);
+    
+    // Switch to the category where item was added
+    setActiveCategory(newItemCategory);
+  };
+
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    if (!newCategoryNameStr.trim()) return;
+    
+    // Check if duplicate
+    if (categories.includes(newCategoryNameStr.trim())) {
+      alert("這個分類已經存在了！");
+      return;
+    }
+
+    const newCats = [...categories, newCategoryNameStr.trim()];
+    setCategories(newCats);
+    setActiveCategory(newCategoryNameStr.trim());
+    setNewCategoryNameStr("");
+    setIsAddingCategory(false);
+    
+    // Scroll to the end of the list after a short delay
+    setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          left: scrollContainerRef.current.scrollWidth,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  };
+
+  const updateItem = (e) => {
+    e.preventDefault();
+    if (!editingItem.name.trim()) return;
+
+    setItems(items.map(item => 
+      item.id === editingItem.id ? editingItem : item
+    ));
+    setEditingItem(null);
+  };
+
+  const progress = useMemo(() => {
+    if (items.length === 0) return 0;
+    const checkedCount = items.filter(i => i.checked).length;
+    return Math.round((checkedCount / items.length) * 100);
+  }, [items]);
+
+  // Group items by category (Optimized for single category access)
+  const currentCategoryItems = useMemo(() => {
+    return items.filter(item => item.category === activeCategory);
+  }, [items, activeCategory]);
+
+  // Calculate completion for active category
+  const activeCategoryProgress = useMemo(() => {
+    if (currentCategoryItems.length === 0) return 0;
+    const checked = currentCategoryItems.filter(i => i.checked).length;
+    return { current: checked, total: currentCategoryItems.length };
+  }, [currentCategoryItems]);
+
+  const allChecked = activeCategoryProgress.total > 0 && activeCategoryProgress.current === activeCategoryProgress.total;
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-24">
+      {/* Header Area */}
+      <div className="bg-gradient-to-r from-blue-600 to-teal-500 text-white shadow-lg sticky top-0 z-20">
+        <div className="max-w-3xl mx-auto px-4 pt-6 pb-2">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Plane className="w-6 h-6" /> 德國交換行李清單
+              </h1>
+              <p className="text-blue-100 text-sm mt-1">預祝留學生活順利！Alles Gute!</p>
+            </div>
+            <button 
+              onClick={requestReset}
+              className="p-2 text-blue-100 hover:text-white transition-colors"
+              title="重置清單"
+            >
+              <RotateCcw className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Global Progress Bar */}
+          <div className="bg-blue-900/30 rounded-full h-3 relative overflow-hidden backdrop-blur-sm mb-1">
+            <div 
+              className="bg-white h-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            >
+            </div>
+          </div>
+          <div className="flex justify-between text-xs text-blue-100 font-medium mb-4">
+            <span>總進度</span>
+            <span>{progress}% 完成</span>
+          </div>
+
+          {/* Tab Navigation */}
+          <div 
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto gap-2 pb-2 -mx-4 px-4 no-scrollbar items-center select-none"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {categories.map(cat => {
+              const isActive = activeCategory === cat;
+              // Check if category is completed
+              const catItems = items.filter(i => i.category === cat);
+              const isCompleted = catItems.length > 0 && catItems.every(i => i.checked);
+              
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`
+                    whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1.5 flex-shrink-0
+                    ${isActive 
+                      ? 'bg-white text-blue-600 shadow-md scale-105' 
+                      : 'bg-blue-800/30 text-blue-100 hover:bg-blue-800/50 hover:text-white border border-transparent'
+                    }
+                    ${!isActive && isCompleted ? 'border-green-400/50 text-green-100' : ''}
+                  `}
+                >
+                  {isCompleted && !isActive && <Check className="w-3 h-3" />}
+                  {cat}
+                </button>
+              );
+            })}
+            
+            {/* Add Category Button in Tabs */}
+            <button
+              onClick={() => setIsAddingCategory(true)}
+              className="whitespace-nowrap px-3 py-2 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 flex-shrink-0 bg-blue-800/30 text-blue-100 hover:bg-white hover:text-blue-600 border border-transparent border-dashed border-blue-300/50"
+              title="新增分類"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content - Single Category View */}
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden min-h-[50vh]">
+          {/* Category Header */}
+          <div className={`px-4 py-4 border-b border-slate-100 flex justify-between items-center ${allChecked ? 'bg-green-50' : 'bg-slate-50'}`}>
+            <h2 className="font-bold text-xl text-slate-700">{activeCategory}</h2>
+            <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${allChecked ? 'bg-green-100 text-green-700 border-green-200' : 'bg-white text-slate-500 border-slate-200'}`}>
+              {activeCategoryProgress.current} / {activeCategoryProgress.total}
+            </span>
+          </div>
+          
+          {/* Items List */}
+          <div className="divide-y divide-slate-50">
+            {currentCategoryItems.length > 0 ? (
+              currentCategoryItems.map(item => (
+                <div 
+                  key={item.id} 
+                  className={`flex items-start gap-3 p-4 transition-colors hover:bg-slate-50 animate-in fade-in duration-300 ${item.checked ? 'bg-slate-50/80' : ''}`}
+                >
+                  <button 
+                    onClick={() => toggleCheck(item.id)}
+                    className={`mt-1 flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
+                      item.checked 
+                        ? 'bg-blue-500 border-blue-500 text-white' 
+                        : 'border-slate-300 text-transparent hover:border-blue-400'
+                    }`}
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  </button>
+
+                  <div className="flex-grow min-w-0 cursor-pointer" onClick={() => toggleCheck(item.id)}>
+                    <div className={`font-medium text-lg leading-snug ${item.checked ? 'text-slate-400 line-through decoration-slate-300' : 'text-slate-700'}`}>
+                      {item.name}
+                    </div>
+                    {(item.note || item.checked) && (
+                      <div className={`text-sm mt-1 flex items-start gap-1 ${item.checked ? 'text-slate-300' : 'text-amber-600'}`}>
+                          {!item.checked && item.note && <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />}
+                          {item.note}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}
+                      className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); requestDelete(item.id); }}
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-10 text-center text-slate-400 flex flex-col items-center">
+                <ShoppingBag className="w-12 h-12 mb-2 opacity-20" />
+                <p>這個分類還沒有物品</p>
+                <button 
+                  onClick={() => { setNewItemCategory(activeCategory); setIsAdding(true); }}
+                  className="mt-4 text-blue-500 font-medium hover:underline"
+                >
+                  新增第一項物品
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={() => {
+          setNewItemCategory(activeCategory);
+          setIsAdding(true);
+        }}
+        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-xl transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 font-bold z-30"
+      >
+        <Plus className="w-6 h-6" />
+        <span className="hidden sm:inline">新增物品</span>
+      </button>
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl scale-100">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 text-red-500 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-lg text-slate-800 mb-2">{confirmModal.title}</h3>
+              <p className="text-slate-500 text-sm">{confirmModal.message}</p>
+            </div>
+            <div className="flex border-t border-slate-100">
+              <button 
+                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                className="flex-1 px-4 py-3 text-slate-600 font-medium hover:bg-slate-50 transition-colors border-r border-slate-100"
+              >
+                取消
+              </button>
+              <button 
+                onClick={handleConfirm}
+                className="flex-1 px-4 py-3 text-red-600 font-bold hover:bg-red-50 transition-colors"
+              >
+                確認
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Category Modal */}
+      {isAddingCategory && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <form onSubmit={handleAddCategory} className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl scale-100">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-lg text-slate-800">新增分類</h3>
+              <button type="button" onClick={() => setIsAddingCategory(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">分類名稱</label>
+                <div className="relative">
+                  <Tag className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    autoFocus
+                    required
+                    placeholder="例如：3C用品"
+                    value={newCategoryNameStr}
+                    onChange={(e) => setNewCategoryNameStr(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-lg"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+              <button 
+                type="button" 
+                onClick={() => setIsAddingCategory(false)}
+                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button 
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                新增分類
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Add Item Modal */}
+      {isAdding && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <form onSubmit={addItem} className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl scale-100">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-lg text-slate-800">新增物品</h3>
+              <button type="button" onClick={() => setIsAdding(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">物品名稱</label>
+                <input 
+                  type="text" 
+                  autoFocus
+                  required
+                  placeholder="例如：轉接頭"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">分類</label>
+                <select 
+                  value={newItemCategory}
+                  onChange={(e) => setNewItemCategory(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none bg-white"
+                >
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">備註 (選填)</label>
+                <input 
+                  type="text" 
+                  placeholder="例如：放隨身行李"
+                  value={newItemNote}
+                  onChange={(e) => setNewItemNote(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+              <button 
+                type="button" 
+                onClick={() => setIsAdding(false)}
+                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button 
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                新增
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <form onSubmit={updateItem} className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-lg text-slate-800">編輯物品</h3>
+              <button type="button" onClick={() => setEditingItem(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">物品名稱</label>
+                <input 
+                  type="text" 
+                  required
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem({...editingItem, name: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">分類</label>
+                <select 
+                  value={editingItem.category}
+                  onChange={(e) => setEditingItem({...editingItem, category: e.target.value})}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none bg-white"
+                >
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">備註</label>
+                <input 
+                  type="text" 
+                  value={editingItem.note}
+                  onChange={(e) => setEditingItem({...editingItem, note: e.target.value})}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+              <button 
+                type="button" 
+                onClick={() => setEditingItem(null)}
+                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+              <button 
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                儲存變更
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
